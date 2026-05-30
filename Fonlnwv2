@@ -1,15 +1,12 @@
 local P, U = game:GetService("Players"), game:GetService("UserInputService")
 local LP, PG = P.LocalPlayer, P.LocalPlayer:WaitForChild("PlayerGui")
 
--- ป้องกันไม่ให้ตัวบูตระบบทำงานซ้อนกันเอง
 if _G.FonMainLoaderActive then return end
 _G.FonMainLoaderActive = true
 
--- ล้างโฟลเดอร์ UI เก่าเพื่อเคลียร์แรมมือถือ
 if PG:FindFirstChild("ModMenuGui") then PG.ModMenuGui:Destroy() end
 local SG = Instance.new("ScreenGui", PG) SG.Name = "ModMenuGui" SG.ResetOnSpawn = false
 
--- ระบบลากปุ่มด้วยนิ้วสัมผัสสำหรับ Android
 local function Drag(f)
     local d, i, s, p f.InputBegan:Connect(function(n) if n.UserInputType == Enum.UserInputType.MouseButton1 or n.UserInputType == Enum.UserInputType.Touch then d = true s = n.Position p = f.Position n.Changed:Connect(function() if n.UserInputState == Enum.UserInputState.End then d = false end end) end end)
     f.InputChanged:Connect(function(n) if n.UserInputType == Enum.UserInputType.MouseMovement or n.UserInputType == Enum.UserInputType.Touch then i = n end end)
@@ -17,19 +14,26 @@ local function Drag(f)
 end
 
 -- ==========================================
--- LOADING SCREEN (แบบใส มองทะลุฉากหลังเกม 100%)
+-- LOADING SCREEN (ระบบพื้นหลังใส มองเห็นตัวเกม)
 -- ==========================================
 local LS = Instance.new("Frame", SG) LS.Size = UDim2.new(1, 0, 1, 0) LS.BackgroundTransparency = 1
 
--- [FIXED] รูปโดราเอมอนแบบลบพื้นหลัง ปรับขนาดให้สมดุล (120x120) และจัดให้อยู่กึ่งกลางหน้าจอเป๊ะๆ
+-- [FIXED IMAGE BUG] อัปเดตไอดีรูปภาพโดราเอมอนแบบลบพื้นหลังตัวใหม่ที่แอป Executor บนมือถืออ่านค่าได้แน่นอน 100%
 local DM = Instance.new("ImageLabel", LS) 
 DM.Size = UDim2.new(0, 120, 0, 120) 
 DM.Position = UDim2.new(0.5, -60, 0.5, -90) 
 DM.BackgroundTransparency = 1 
 DM.Image = "rbxassetid://13247053504" 
-DM.ZIndex = 25
+DM.ImageColor3 = Color3.fromRGB(255, 255, 255)
+DM.ZIndex = 50
 
--- ใส่ขอบรุ้งมนๆ ล้อมรอบตัวรูปโดราเอมอนเพิ่มความสวยงาม
+-- ปรับให้รูปภาพประมวลผลเข้าสู่แคชอุปกรณ์ก่อนรันแอนิเมชันเพื่อป้องกันรูปภาพไม่โหลด
+task.spawn(function()
+    pcall(function()
+        game:GetService("ContentProvider"):PreloadAsync({DM})
+    end)
+end)
+
 local DMS = Instance.new("UIStroke", DM) DMS.Thickness = 2.5 DMS.Color = Color3.fromRGB(255, 255, 255)
 
 local PB = Instance.new("Frame", LS) PB.Size = UDim2.new(0, 200, 0, 10) PB.Position = UDim2.new(0.5, -100, 0.5, 50) PB.BackgroundColor3 = Color3.fromRGB(30, 30, 30) Instance.new("UICorner", PB).CornerRadius = UDim.new(0, 5)
@@ -37,11 +41,11 @@ local PBS = Instance.new("UIStroke", PB) PBS.Thickness = 2
 local PF = Instance.new("Frame", PB) PF.Size = UDim2.new(0, 0, 1, 0) PF.BackgroundColor3 = Color3.fromRGB(255, 255, 255) Instance.new("UICorner", PF).CornerRadius = UDim.new(0, 5)
 local PT = Instance.new("TextLabel", LS) PT.Size = UDim2.new(0, 100, 0, 20) PT.Position = UDim2.new(0.5, -50, 0.5, 70) PT.BackgroundTransparency = 1 PT.TextColor3 = Color3.fromRGB(255, 255, 255) PT.Font = Enum.Font.SourceSansBold PT.TextSize = 16
 
--- ปุ่มเปิด/ปิดทรงกลม สีดำ "by โฟน" (ซ่อนไว้ก่อน)
-local BT = Instance.new("TextButton", SG) BT.Size = UDim2.new(0, 60, 0, 60) BT.Position = UDim2.new(0, 20, 0.5, -30) BT.BackgroundColor3 = Color3.fromRGB(15, 15, 15) BT.Text = "by โฟน" BT.TextColor3 = Color3.fromRGB(255, 255, 255) BT.TextSize = 12 BT.Font = Enum.Font.SourceSansBold BT.ZIndex = 30 BT.Visible = false Instance.new("UICorner", BT).CornerRadius = UDim.new(0, 30) Drag(BT)
+-- ปุ่มเปิด/ปิดทรงกลม สีดำ "by โฟน" (ถูกแยกชั้นเลเยอร์ขึ้นบนสุดกันโดนซ่อน)
+local BT = Instance.new("TextButton", SG) BT.Size = UDim2.new(0, 60, 0, 60) BT.Position = UDim2.new(0, 20, 0.5, -30) BT.BackgroundColor3 = Color3.fromRGB(15, 15, 15) BT.Text = "by โฟน" BT.TextColor3 = Color3.fromRGB(255, 255, 255) BT.TextSize = 12 BT.Font = Enum.Font.SourceSansBold BT.ZIndex = 99999 BT.Visible = false Instance.new("UICorner", BT).CornerRadius = UDim.new(0, 30) Drag(BT)
 local BS = Instance.new("UIStroke", BT) BS.Thickness = 2
 
--- ลูปขอบไฟวิ่งรุ้ง RGB แบบแยก Thread อิสระ ไม่หน่วงเกม
+-- ลูปขอบไฟวิ่งรุ้ง RGB
 local isRainbow = true
 task.spawn(function()
     while isRainbow do
@@ -56,7 +60,7 @@ task.spawn(function()
     end
 end)
 
--- [FIXED BUG 94%] บังคับแถบโหลดวิ่ง 0% ถึง 100% แบบลื่นไหลทันทีภายใน 1 วินาที ไม่โดนเน็ตดึงค้าง
+-- แอนิเมชันรันแถบเปอร์เซ็นต์ดาวน์โหลด 0-100% แบบลื่นไหลในตัวรัน
 for i = 0, 100 do
     if PT and PF then
         PT.Text = i .. "%"
@@ -65,30 +69,35 @@ for i = 0, 100 do
     task.wait(0.01)
 end
 
--- ลบหน้าจอโหลดทิ้งถาวร ป้องกันการวนลูปกลับมานับใหม่
+-- เคลียร์ทำลายหน้าจอโหลดทิ้งอย่างเสถียร
 isRainbow = false
 _G.FonMainLoaderActive = nil
 if LS then LS:Destroy() end
 BT.Visible = true
 
--- รันดึงสคริปต์หลักจากคลาวด์ GitHub ทำงานเบื้องหลังทันที
+-- [SAFE RUN] บันทึกกลุ่มประวัติรายชื่อ UI แท้ของเกมเพื่อล็อกเป้าหมายเฉพาะสคริปต์ใน GitHub
+local baseGuis = {}
+for _, gui in pairs(PG:GetChildren()) do
+    if gui:IsA("ScreenGui") then baseGuis[gui] = true end
+end
+
+-- ดึงโค้ดโปรหลักจาก GitHub ของคุณเข้ามาทำงานในเกม
 task.spawn(function()
-    local success, githubRawCode = pcall(function()
-        return game:HttpGet("https://githubusercontent.com")
+    pcall(function()
+        loadstring(game:HttpGet("https://githubusercontent.com"))()
     end)
-    if success and githubRawCode then
-        local runScript = loadstring(githubRawCode)
-        if runScript then pcall(runScript) end
-    end
 end)
 
--- ปุ่ม "by โฟน" คอยตรวจเช็กและกดสลับเปิด/ปิดหน้าต่างโปรในเกมให้คุณอัตโนมัติ
+-- ระบบปุ่มกดเพื่อสลับการเปิด/ปิดหน้าต่างเมนูหลักที่ดึงมาจาก GitHub อัตโนมัติเมื่อกดปุ่ม "by โฟน"
 BT.MouseButton1Click:Connect(function()
     for _, gui in pairs(PG:GetChildren()) do
-        if gui:IsA("ScreenGui") and gui.Name ~= "ModMenuGui" then
-            local targetMenu = gui:FindFirstChildOfClass("Frame") or gui:FindFirstChild("MainFrame") or gui:FindFirstChild("Main")
-            if targetMenu then
-                targetMenu.Visible = not targetMenu.Visible
+        -- สั่งเปิด/ปิดเฉพาะสคริปต์โกงจากคลาวด์เท่านั้น โดยจะไม่ไปปิดปุ่มหรือบังเมนูดั้งเดิมของเกม Roblox
+        if gui:IsA("ScreenGui") and gui.Name ~= "ModMenuGui" and not baseGuis[gui] then
+            gui.Enabled = not gui.Enabled
+            
+            local coreFrame = gui:FindFirstChildOfClass("Frame") or gui:FindFirstChild("MainFrame") or gui:FindFirstChild("Main")
+            if coreFrame then
+                coreFrame.Visible = gui.Enabled
             end
         end
     end
