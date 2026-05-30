@@ -1,9 +1,11 @@
 local P,U=game:GetService("Players"),game:GetService("UserInputService")
 local LP,PG=P.LocalPlayer,P.LocalPlayer:WaitForChild("PlayerGui")
 
+-- ล้าง UI ตัวเก่าออกก่อนเพื่อป้องกันการโหลดทับซ้อน
 if PG:FindFirstChild("ModMenuGui") then PG.ModMenuGui:Destroy() end
 local SG=Instance.new("ScreenGui",PG) SG.Name="ModMenuGui" SG.ResetOnSpawn=false
 
+-- ระบบลากปุ่มด้วยนิ้วสำหรับหน้าจอมือถือ (Drag System)
 local function Drag(f)
     local d,i,s,p f.InputBegan:Connect(function(n) if n.UserInputType==Enum.UserInputType.MouseButton1 or n.UserInputType==Enum.UserInputType.Touch then d=true s=n.Position p=f.Position n.Changed:Connect(function() if n.UserInputState==Enum.UserInputState.End then d=false end end) end end)
     f.InputChanged:Connect(function(n) if n.UserInputType==Enum.UserInputType.MouseMovement or n.UserInputType==Enum.UserInputType.Touch then i=n end end)
@@ -11,11 +13,11 @@ local function Drag(f)
 end
 
 -- ==========================================
--- LOADING SCREEN (แบบใส มองทะลุเห็นเกม)
+-- LOADING SCREEN (แบบใส มองทะลุเห็นเกม + โดราเอมอนขอบรุ้ง)
 -- ==========================================
 local LS=Instance.new("Frame",SG) LS.Size=UDim2.new(1,0,1,0) LS.BackgroundTransparency=1
 
--- [FIXED] แก้ไขส่วนรูปโดราเอมอนให้แสดงผลชัดเจน ไม่โดนขอบดำบัง
+-- รูปโดราเอมอนล็อก ZIndex สูงสุดเพื่อไม่ให้รูปภาพหาย
 local DM=Instance.new("ImageLabel",LS) DM.Size=UDim2.new(0,100,0,100) DM.Position=UDim2.new(0.5,-50,0.5,-80) DM.BackgroundTransparency=1 DM.Image="rbxassetid://13247053504" DM.ZIndex=5
 local DMS=Instance.new("UIStroke",DM) DMS.Thickness=2 DMS.Color=Color3.fromRGB(255,255,255)
 
@@ -24,10 +26,11 @@ local PBS=Instance.new("UIStroke",PB) PBS.Thickness=2
 local PF=Instance.new("Frame",PB) PF.Size=UDim2.new(0,0,1,0) PF.BackgroundColor3=Color3.fromRGB(255,255,255) Instance.new("UICorner",PF).CornerRadius=UDim.new(0,5)
 local PT=Instance.new("TextLabel",LS) PT.Size=UDim2.new(0,100,0,20) PT.Position=UDim2.new(0.5,-50,0.5,60) PT.BackgroundTransparency=1 PT.TextColor3=Color3.fromRGB(255,255,255) PT.Font=Enum.Font.SourceSansBold PT.TextSize=16
 
+-- ปุ่มเปิด/ปิดทรงกลม สีดำ "by โฟน" (ซ่อนไว้ก่อนจนกว่าจะโหลดเสร็จ)
 local BT=Instance.new("TextButton",SG) BT.Size=UDim2.new(0,60,0,60) BT.Position=UDim2.new(0,20,0.5,-30) BT.BackgroundColor3=Color3.fromRGB(15,15,15) BT.Text="by โฟน" BT.TextColor3=Color3.fromRGB(255,255,255) BT.TextSize=12 BT.Font=Enum.Font.SourceSansBold BT.ZIndex=10 BT.Visible=false Instance.new("UICorner",BT).CornerRadius=UDim.new(0,30) Drag(BT)
 local BS=Instance.new("UIStroke",BT) BS.Thickness=2
 
--- ลูปไฟรุ้ง RGB (เพิ่มขอบรุ้งให้รูปโดราเอมอนด้วย)
+-- ลูปขอบสีรุ้ง RGB มัดรวมกันเพื่อความลื่นไหลของเฟรมเรตมือถือ
 task.spawn(function()
     while task.wait(0.02) do
         for g=0,1,0.02 do
@@ -39,7 +42,7 @@ task.spawn(function()
     end
 end)
 
--- แอนิเมชันนับ % โหลด
+-- แอนิเมชันรัน % ดาวน์โหลด (รอบเดียวจบ)
 for i=0,100 do 
     if PT and PF then
         PT.Text=i.."%" 
@@ -48,16 +51,16 @@ for i=0,100 do
     task.wait(0.015) 
 end
 
--- เคลียร์หน้าจอโหลด และเปิดปุ่มเปิด/ปิด
+-- [FORCE DESTROY] ตัดการทำงานหน้าจอโหลดทิ้งให้ขาด เพื่อไม่ให้วนกลับมาโหลดซ้ำ
 if LS then LS:Destroy() end
 BT.Visible = true
 
--- รันสคริปต์หลักจาก GitHub
+-- รันดึงสคริปต์หลักจากลิงก์ GitHub ของคุณเข้ามาทำงานในเกม
 pcall(function()
-    loadstring(game:HttpGet("https://githubusercontent.com"))()
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/thanawongkanwong25-ui/Fonlnww-v2/refs/heads/main/Fonlnwv2"))()
 end)
 
--- ปุ่มสลับเปิด/ปิดเมนูจาก GitHub
+-- ระบบสลับเปิด/ปิดหน้าต่างโปรใน GitHub เมื่อคลิกที่ปุ่มวงกลม
 BT.MouseButton1Click:Connect(function()
     for _, gui in pairs(PG:GetChildren()) do
         if gui:IsA("ScreenGui") and gui.Name ~= "ModMenuGui" then
