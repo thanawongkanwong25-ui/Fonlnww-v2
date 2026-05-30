@@ -1,15 +1,14 @@
 local P, U = game:GetService("Players"), game:GetService("UserInputService")
 local LP, PG = P.LocalPlayer, P.LocalPlayer:WaitForChild("PlayerGui")
 
--- ดักระบบบูตเตอร์ซ้อนกันเอง
+-- ดักระบบป้องกันการรันโหลดเดอร์ซ้อนกันเอง
 if _G.FonMainLoaderActive then return end
 _G.FonMainLoaderActive = true
 
--- ล้าง UI โหลดเดอร์ตัวเก่าที่ค้าง
 if PG:FindFirstChild("ModMenuGui") then PG.ModMenuGui:Destroy() end
 local SG = Instance.new("ScreenGui", PG) SG.Name = "ModMenuGui" SG.ResetOnSpawn = false
 
--- ระบบลากปุ่มด้วยนิ้วมือสัมผัสสำหรับมือถือ Android
+-- ระบบลากปุ่มด้วยนิ้วสัมผัสสำหรับมือถือ Android
 local function Drag(f)
     local d, i, s, p f.InputBegan:Connect(function(n) if n.UserInputType == Enum.UserInputType.MouseButton1 or n.UserInputType == Enum.UserInputType.Touch then d = true s = n.Position p = f.Position n.Changed:Connect(function() if n.UserInputState == Enum.UserInputState.End then d = false end end) end end)
     f.InputChanged:Connect(function(n) if n.UserInputType == Enum.UserInputType.MouseMovement or n.UserInputType == Enum.UserInputType.Touch then i = n end end)
@@ -17,11 +16,10 @@ local function Drag(f)
 end
 
 -- ==========================================
--- LOADING SCREEN (ระบบใส มองเห็นตัวเกม ไม่บังฉาก)
+-- STEP 1: รัน LOADING SCREEN (พื้นหลังใส) ให้เสร็จก่อน
 -- ==========================================
 local LS = Instance.new("Frame", SG) LS.Size = UDim2.new(1, 0, 1, 0) LS.BackgroundTransparency = 1
 
--- [FIXED] โหลดรูปโดราเอมอนแบบลบพื้นหลังผ่านระบบจำลอง แคชจะดึงภาพมาขึ้นบนมือถือแน่นอน
 local DM = Instance.new("ImageLabel", LS) DM.Size = UDim2.new(0, 120, 0, 120) DM.Position = UDim2.new(0.5, -60, 0.5, -90) DM.BackgroundTransparency = 1 DM.Image = "rbxassetid://13247053504" DM.ZIndex = 50
 task.spawn(function() pcall(function() game:GetService("ContentProvider"):PreloadAsync({DM}) end) end)
 
@@ -31,11 +29,7 @@ local PBS = Instance.new("UIStroke", PB) PBS.Thickness = 2
 local PF = Instance.new("Frame", PB) PF.Size = UDim2.new(0, 0, 1, 0) PF.BackgroundColor3 = Color3.fromRGB(255, 255, 255) Instance.new("UICorner", PF).CornerRadius = UDim.new(0, 5)
 local PT = Instance.new("TextLabel", LS) PT.Size = UDim2.new(0, 100, 0, 20) PT.Position = UDim2.new(0.5, -50, 0.5, 70) PT.BackgroundTransparency = 1 PT.TextColor3 = Color3.fromRGB(255, 255, 255) PT.Font = Enum.Font.SourceSansBold PT.TextSize = 16
 
--- ปุ่มเปิด/ปิดทรงกลม สีดำ "by โฟน"
-local BT = Instance.new("TextButton", SG) BT.Size = UDim2.new(0, 60, 0, 60) BT.Position = UDim2.new(0, 20, 0.5, -30) BT.BackgroundColor3 = Color3.fromRGB(15, 15, 15) BT.Text = "by โฟน" BT.TextColor3 = Color3.fromRGB(255, 255, 255) BT.TextSize = 12 BT.Font = Enum.Font.SourceSansBold BT.ZIndex = 99999 BT.Visible = false Instance.new("UICorner", BT).CornerRadius = UDim.new(0, 30) Drag(BT)
-local BS = Instance.new("UIStroke", BT) BS.Thickness = 2
-
--- ลูปขอบไฟวิ่งรุ้ง RGB
+-- ลูปขอบไฟวิ่งรุ้ง RGB เฉพาะหน้าจอโหลดในช่วงแรก
 local isRainbow = true
 task.spawn(function()
     while isRainbow do
@@ -44,48 +38,65 @@ task.spawn(function()
             local c = Color3.fromHSV(g, 1, 1)
             if DMS and DMS.Parent then DMS.Color = c end
             if PBS and PBS.Parent then PBS.Color = c end
-            if BS and BS.Parent then BS.Color = c end
-            task.wait(0.01)
         end
+        task.wait(0.01)
     end
 end)
 
--- แอนิเมชันรันแถบเปอร์เซ็นต์โหลด 0-100%
+-- บังคับแอนิเมชันแถบเปอร์เซ็นต์วิ่งจนเต็ม 100%
 for i = 0, 100 do
     if PT and PF then PT.Text = i .. "%" PF.Size = UDim2.new(i / 100, 0, 1, 0) end
     task.wait(0.01)
 end
 
--- ลบหน้าจอโหลดทิ้งทันทีอย่างถาวร
+-- [COMPLETE STEP 1] ทำลายหน้าจอโหลดทิ้งถาวรเมื่อครบ 100% เรียบร้อยแล้ว
 isRainbow = false
-_G.FonMainLoaderActive = nil
 if LS then LS:Destroy() end
-BT.Visible = true
 
--- [TRACK EXTRA GUI] บันทึกรายชื่อ UI เดิมทั้งหมดที่มีในเครื่องไว้ เพื่อแยกแยะของใหม่จาก GitHub
-local oldGuis = {}
-for _, g in pairs(PG:GetChildren()) do if g:IsA("ScreenGui") then oldGuis[g] = true end end
+-- ==========================================
+-- STEP 2: โหลดเสร็จแล้ว ค่อยรันปุ่มซ่อนและเมนูฟังก์ชันโกงทีหลัง
+-- ==========================================
 
--- สั่งรันดึงสคริปต์ฟังก์ชันบินและสูตรโกงทั้งหมดของคุณจาก GitHub
+-- สร้างปุ่มเปิด/ปิดทรงกลม สีดำ "by โฟน" ขึ้นมาทีหลัง
+local BT = Instance.new("TextButton", SG) BT.Size = UDim2.new(0, 60, 0, 60) BT.Position = UDim2.new(0, 20, 0.5, -30) BT.BackgroundColor3 = Color3.fromRGB(15, 15, 15) BT.Text = "by โฟน" BT.TextColor3 = Color3.fromRGB(255, 255, 255) BT.TextSize = 12 BT.Font = Enum.Font.SourceSansBold BT.ZIndex = 99999 Drag(BT)
+local BS = Instance.new("UIStroke", BT) BS.Thickness = 2
+
+-- เปิดลูปไฟวิ่งรุ้ง RGB รอบใหม่ให้ตัวปุ่มเปิด/ปิด
+local isButtonRainbow = true
+task.spawn(function()
+    while isButtonRainbow do
+        for g = 0, 1, 0.02 do
+            if not isButtonRainbow then break end
+            if BS and BS.Parent then BS.Color = Color3.fromHSV(g, 1, 1) end
+        end
+        task.wait(0.01)
+    end
+end)
+
+-- บันทึกรายชื่อหน้าจอเดิมที่มีอยู่ ก่อนที่จะทำการดึงเมนูหลักเข้ามา
+local baseGuis = {}
+for _, gui in pairs(PG:GetChildren()) do if gui:IsA("ScreenGui") then baseGuis[gui] = true end end
+
+-- สั่งรันดึงสคริปต์หลักและฟังก์ชันบินทั้งหมดของคุณจากคลาวด์ GitHub
 task.spawn(function()
     pcall(function()
         loadstring(game:HttpGet("https://githubusercontent.com"))()
     end)
 end)
 
--- [FIXED] ระบบปุ่มเปิด/ปิดเวอร์ชันเจาะจงเป้าหมาย ล็อกความปลอดภัยปุ่มเกมไม่หาย
+-- ระบบสลับเปิด/ปิดหน้าต่างเมนูโกงหลักจาก GitHub ล็อกความปลอดภัยปุ่มเกมไม่หาย
 BT.MouseButton1Click:Connect(function()
     for _, gui in pairs(PG:GetChildren()) do
-        -- สั่งสลับเปิด/ปิดเฉพาะ ScreenGui ใหม่ที่โผล่ขึ้นมาจากไฟล์ GitHub ของคุณเท่านั้น
-        if gui:IsA("ScreenGui") and gui.Name ~= "ModMenuGui" and not oldGuis[gui] then
+        -- สั่งเปิด/ปิดเฉพาะ ScreenGui ตัวใหม่ที่เกิดมาจากคลาวด์สคริปต์ของคุณเท่านั้น
+        if gui:IsA("ScreenGui") and gui.Name ~= "ModMenuGui" and not baseGuis[gui] then
             gui.Enabled = not gui.Enabled
             
-            -- ปลดล็อกการซ่อนภายในเฟรมให้แสดงขึ้นจอ
-            for _, frame in pairs(gui:GetChildren()) do
-                if frame:IsA("Frame") then
-                    frame.Visible = gui.Enabled
-                end
+            local coreFrame = gui:FindFirstChildOfClass("Frame") or gui:FindFirstChild("MainFrame") or gui:FindFirstChild("Main")
+            if coreFrame then
+                coreFrame.Visible = gui.Enabled
             end
         end
     end
 end)
+
+_G.FonMainLoaderActive = nil
