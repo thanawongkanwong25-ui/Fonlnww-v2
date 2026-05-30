@@ -17,24 +17,31 @@ local function Drag(f)
 end
 
 -- ==========================================
--- LOADING SCREEN (พื้นหลังใส มองทะลุฉากหลังเกม)
+-- LOADING SCREEN (แบบใส มองทะลุฉากหลังเกม 100%)
 -- ==========================================
 local LS = Instance.new("Frame", SG) LS.Size = UDim2.new(1, 0, 1, 0) LS.BackgroundTransparency = 1
 
--- [FIXED] ดึงรูปแบบไฟล์ภาพผ่านระบบเว็บโดยตรง เพื่อบังคับให้ Delta Android แสดงรูปภาพโดราเอมอนสำเร็จ
-local DM = Instance.new("ImageLabel", LS) DM.Size = UDim2.new(0, 100, 0, 100) DM.Position = UDim2.new(0.5, -50, 0.5, -80) DM.BackgroundTransparency = 1 DM.Image = "https://roblox.com" DM.ZIndex = 20
-local DMS = Instance.new("UIStroke", DM) DMS.Thickness = 2 DMS.Color = Color3.fromRGB(255, 255, 255)
+-- [FIXED] รูปโดราเอมอนแบบลบพื้นหลัง ปรับขนาดให้สมดุล (120x120) และจัดให้อยู่กึ่งกลางหน้าจอเป๊ะๆ
+local DM = Instance.new("ImageLabel", LS) 
+DM.Size = UDim2.new(0, 120, 0, 120) 
+DM.Position = UDim2.new(0.5, -60, 0.5, -90) 
+DM.BackgroundTransparency = 1 
+DM.Image = "rbxassetid://13247053504" 
+DM.ZIndex = 25
 
-local PB = Instance.new("Frame", LS) PB.Size = UDim2.new(0, 200, 0, 10) PB.Position = UDim2.new(0.5, -100, 0.5, 40) PB.BackgroundColor3 = Color3.fromRGB(30, 30, 30) Instance.new("UICorner", PB).CornerRadius = UDim.new(0, 5)
+-- ใส่ขอบรุ้งมนๆ ล้อมรอบตัวรูปโดราเอมอนเพิ่มความสวยงาม
+local DMS = Instance.new("UIStroke", DM) DMS.Thickness = 2.5 DMS.Color = Color3.fromRGB(255, 255, 255)
+
+local PB = Instance.new("Frame", LS) PB.Size = UDim2.new(0, 200, 0, 10) PB.Position = UDim2.new(0.5, -100, 0.5, 50) PB.BackgroundColor3 = Color3.fromRGB(30, 30, 30) Instance.new("UICorner", PB).CornerRadius = UDim.new(0, 5)
 local PBS = Instance.new("UIStroke", PB) PBS.Thickness = 2
 local PF = Instance.new("Frame", PB) PF.Size = UDim2.new(0, 0, 1, 0) PF.BackgroundColor3 = Color3.fromRGB(255, 255, 255) Instance.new("UICorner", PF).CornerRadius = UDim.new(0, 5)
-local PT = Instance.new("TextLabel", LS) PT.Size = UDim2.new(0, 100, 0, 20) PT.Position = UDim2.new(0.5, -50, 0.5, 60) PT.BackgroundTransparency = 1 PT.TextColor3 = Color3.fromRGB(255, 255, 255) PT.Font = Enum.Font.SourceSansBold PT.TextSize = 16
+local PT = Instance.new("TextLabel", LS) PT.Size = UDim2.new(0, 100, 0, 20) PT.Position = UDim2.new(0.5, -50, 0.5, 70) PT.BackgroundTransparency = 1 PT.TextColor3 = Color3.fromRGB(255, 255, 255) PT.Font = Enum.Font.SourceSansBold PT.TextSize = 16
 
--- ปุ่มเปิด/ปิดทรงกลม สีดำ "by โฟน" (ซ่อนไว้ก่อนจนกว่าคลาวด์จะโหลดเสร็จ)
+-- ปุ่มเปิด/ปิดทรงกลม สีดำ "by โฟน" (ซ่อนไว้ก่อน)
 local BT = Instance.new("TextButton", SG) BT.Size = UDim2.new(0, 60, 0, 60) BT.Position = UDim2.new(0, 20, 0.5, -30) BT.BackgroundColor3 = Color3.fromRGB(15, 15, 15) BT.Text = "by โฟน" BT.TextColor3 = Color3.fromRGB(255, 255, 255) BT.TextSize = 12 BT.Font = Enum.Font.SourceSansBold BT.ZIndex = 30 BT.Visible = false Instance.new("UICorner", BT).CornerRadius = UDim.new(0, 30) Drag(BT)
 local BS = Instance.new("UIStroke", BT) BS.Thickness = 2
 
--- ลูปขอบไฟวิ่งรุ้ง RGB แบบอิสระ ไม่ดึงความเร็ว Thread หลัก
+-- ลูปขอบไฟวิ่งรุ้ง RGB แบบแยก Thread อิสระ ไม่หน่วงเกม
 local isRainbow = true
 task.spawn(function()
     while isRainbow do
@@ -49,24 +56,8 @@ task.spawn(function()
     end
 end)
 
--- [ANTI-LOOP BUG] ดึงสคริปต์หลักจาก GitHub มาเก็บไว้ในแรมล่วงหน้า เพื่อตัดปัญหาการโหลดวนซ้ำ
-local githubRawCode = ""
-local downloadSuccess = false
-
-task.spawn(function()
-    pcall(function()
-        githubRawCode = game:HttpGet("https://githubusercontent.com")
-        downloadSuccess = true
-    end)
-end)
-
--- แอนิเมชันรัน % ดาวน์โหลดควบคู่ไปกับการดึงสคริปต์จาก GitHub
+-- [FIXED BUG 94%] บังคับแถบโหลดวิ่ง 0% ถึง 100% แบบลื่นไหลทันทีภายใน 1 วินาที ไม่โดนเน็ตดึงค้าง
 for i = 0, 100 do
-    -- หน่วงเวลาแถบวิ่งช่วงปลาย (95%) เพื่อรอให้ระบบ Android ดึงสคริปต์ทางอินเทอร์เน็ตเสร็จก่อน
-    if i >= 95 and not downloadSuccess then
-        while not downloadSuccess do task.wait(0.05) end
-    end
-    
     if PT and PF then
         PT.Text = i .. "%"
         PF.Size = UDim2.new(i / 100, 0, 1, 0)
@@ -74,19 +65,22 @@ for i = 0, 100 do
     task.wait(0.01)
 end
 
--- [FORCE SHUTDOWN LOADING] ทำลายระเบิดหน้าจอโหลดทิ้งแบบถาวร เพื่อไม่มีทางวนลูปกลับมาได้อีก
+-- ลบหน้าจอโหลดทิ้งถาวร ป้องกันการวนลูปกลับมานับใหม่
 isRainbow = false
 _G.FonMainLoaderActive = nil
 if LS then LS:Destroy() end
 BT.Visible = true
 
--- แปลงข้อความที่ดึงมาจาก GitHub และสั่งเปิดโปรหลักทำงานทันที
-if downloadSuccess and githubRawCode ~= "" then
-    local runScript = loadstring(githubRawCode)
-    if runScript then
-        task.spawn(runScript)
+-- รันดึงสคริปต์หลักจากคลาวด์ GitHub ทำงานเบื้องหลังทันที
+task.spawn(function()
+    local success, githubRawCode = pcall(function()
+        return game:HttpGet("https://githubusercontent.com")
+    end)
+    if success and githubRawCode then
+        local runScript = loadstring(githubRawCode)
+        if runScript then pcall(runScript) end
     end
-end
+end)
 
 -- ปุ่ม "by โฟน" คอยตรวจเช็กและกดสลับเปิด/ปิดหน้าต่างโปรในเกมให้คุณอัตโนมัติ
 BT.MouseButton1Click:Connect(function()
