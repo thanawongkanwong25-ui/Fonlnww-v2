@@ -1,9 +1,9 @@
 local P,U=game:GetService("Players"),game:GetService("UserInputService")
 local LP,PG=P.LocalPlayer,P.LocalPlayer:WaitForChild("PlayerGui")
+
 if PG:FindFirstChild("ModMenuGui") then PG.ModMenuGui:Destroy() end
 local SG=Instance.new("ScreenGui",PG) SG.Name="ModMenuGui" SG.ResetOnSpawn=false
 
--- ระบบลากปุ่ม (Drag System) สำหรับปุ่มเปิด/ปิด
 local function Drag(f)
     local d,i,s,p f.InputBegan:Connect(function(n) if n.UserInputType==Enum.UserInputType.MouseButton1 or n.UserInputType==Enum.UserInputType.Touch then d=true s=n.Position p=f.Position n.Changed:Connect(function() if n.UserInputState==Enum.UserInputState.End then d=false end end) end end)
     f.InputChanged:Connect(function(n) if n.UserInputType==Enum.UserInputType.MouseMovement or n.UserInputType==Enum.UserInputType.Touch then i=n end end)
@@ -14,45 +14,57 @@ end
 -- LOADING SCREEN (แบบใส มองทะลุเห็นเกม)
 -- ==========================================
 local LS=Instance.new("Frame",SG) LS.Size=UDim2.new(1,0,1,0) LS.BackgroundTransparency=1
-local DM=Instance.new("ImageLabel",LS) DM.Size=UDim2.new(0,100,0,100) DM.Position=UDim2.new(0.5,-50,0.5,-80) DM.BackgroundTransparency=1 DM.Image="rbxassetid://13247053504"
-Instance.new("UIStroke",DM).Thickness=2
+
+-- [FIXED] แก้ไขส่วนรูปโดราเอมอนให้แสดงผลชัดเจน ไม่โดนขอบดำบัง
+local DM=Instance.new("ImageLabel",LS) DM.Size=UDim2.new(0,100,0,100) DM.Position=UDim2.new(0.5,-50,0.5,-80) DM.BackgroundTransparency=1 DM.Image="rbxassetid://13247053504" DM.ZIndex=5
+local DMS=Instance.new("UIStroke",DM) DMS.Thickness=2 DMS.Color=Color3.fromRGB(255,255,255)
 
 local PB=Instance.new("Frame",LS) PB.Size=UDim2.new(0,200,0,10) PB.Position=UDim2.new(0.5,-100,0.5,40) PB.BackgroundColor3=Color3.fromRGB(30,30,30) Instance.new("UICorner",PB).CornerRadius=UDim.new(0,5)
 local PBS=Instance.new("UIStroke",PB) PBS.Thickness=2
 local PF=Instance.new("Frame",PB) PF.Size=UDim2.new(0,0,1,0) PF.BackgroundColor3=Color3.fromRGB(255,255,255) Instance.new("UICorner",PF).CornerRadius=UDim.new(0,5)
 local PT=Instance.new("TextLabel",LS) PT.Size=UDim2.new(0,100,0,20) PT.Position=UDim2.new(0.5,-50,0.5,60) PT.BackgroundTransparency=1 PT.TextColor3=Color3.fromRGB(255,255,255) PT.Font=Enum.Font.SourceSansBold PT.TextSize=16
 
--- สร้างปุ่มเปิด/ปิดรอก่อน (ซ่อนไว้ก่อนจนกว่าจะโหลดเสร็จ)
 local BT=Instance.new("TextButton",SG) BT.Size=UDim2.new(0,60,0,60) BT.Position=UDim2.new(0,20,0.5,-30) BT.BackgroundColor3=Color3.fromRGB(15,15,15) BT.Text="by โฟน" BT.TextColor3=Color3.fromRGB(255,255,255) BT.TextSize=12 BT.Font=Enum.Font.SourceSansBold BT.ZIndex=10 BT.Visible=false Instance.new("UICorner",BT).CornerRadius=UDim.new(0,30) Drag(BT)
 local BS=Instance.new("UIStroke",BT) BS.Thickness=2
 
--- ลูปไฟรุ้ง RGB
+-- ลูปไฟรุ้ง RGB (เพิ่มขอบรุ้งให้รูปโดราเอมอนด้วย)
 task.spawn(function()
-    while task.wait() do
-        for g=0,1,0.01 do
+    while task.wait(0.02) do
+        for g=0,1,0.02 do
             local c=Color3.fromHSV(g,1,1)
+            if DMS and DMS.Parent then DMS.Color=c end
             if PBS and PBS.Parent then PBS.Color=c end
             if BS and BS.Parent then BS.Color=c end
-            task.wait(0.02)
         end
     end
 end)
 
--- รันแอนิเมชันดาวน์โหลดและดึงสคริปต์หลักมาทำงาน
+-- แอนิเมชันนับ % โหลด
 for i=0,100 do 
-    PT.Text=i.."%" 
-    PF.Size=UDim2.new(i/100,0,1,0) 
-    task.wait(0.01) 
+    if PT and PF then
+        PT.Text=i.."%" 
+        PF.Size=UDim2.new(i/100,0,1,0) 
+    end
+    task.wait(0.015) 
 end
 
--- เมื่อดาวน์โหลดหลอกเสร็จ ให้ลบหน้าจอโหลดทิ้ง และเปิดปุ่มเปิด/ปิดขึ้นมา
-LS:Destroy()
+-- เคลียร์หน้าจอโหลด และเปิดปุ่มเปิด/ปิด
+if LS then LS:Destroy() end
 BT.Visible = true
 
--- รันสคริปต์หลักจากลิงก์ GitHub ของคุณทันที
-local success, err = pcall(function()
-    loadstring(game:HttpGet("https://raw.githubusercontent.com/thanawongkanwong25-ui/Fonlnww-v2/refs/heads/main/Fonlnwv2"))()
+-- รันสคริปต์หลักจาก GitHub
+pcall(function()
+    loadstring(game:HttpGet("https://githubusercontent.com"))()
 end)
 
--- หากสคริปต์หลักมีหน้าต่างเมนูอยู่แล้ว ให้ผูกปุ่ม BT เข้ากับหน้าต่างหลักของคุณได้เลยครับ
--- ยกตัวอย่างเช่น: BT.MouseButton1Click:Connect(function() หน้าต่างหลักของคุณ.Visible = not หน้าต่างหลักของคุณ.Visible end)
+-- ปุ่มสลับเปิด/ปิดเมนูจาก GitHub
+BT.MouseButton1Click:Connect(function()
+    for _, gui in pairs(PG:GetChildren()) do
+        if gui:IsA("ScreenGui") and gui.Name ~= "ModMenuGui" then
+            local mainFrame = gui:FindFirstChildOfClass("Frame")
+            if mainFrame then
+                mainFrame.Visible = not mainFrame.Visible
+            end
+        end
+    end
+end)
