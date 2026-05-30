@@ -1,1 +1,206 @@
-local P,R,U=game:Service("Players"),game:Service("RunService"),game:Service("UserInputService")local lp=P.LocalPlayer local char=lp.Character or lp.CharacterAdded:Wait()local hum,root,cam=char:WaitForChild("Humanoid"),char:WaitForChild("HumanoidRootPart"),workspace.CurrentCamera local isFlying,isNoClip,isFastWalk,isMenuOpen,speedVal=false,false,false,true,100 local sg=Instance.new("ScreenGui",lp:WaitForChild("PlayerGui"))sg.Name="DXM"sg.ResetOnSpawn=false local frame=Instance.new("Frame",sg)frame.Size=UDim2.new(0,240,0,190)frame.Position=UDim2.new(0.1,0,0.2,0)frame.BackgroundColor3=Color3.fromRGB(25,25,25)frame.Active,frame.Draggable=true,true Instance.new("UICorner",frame).CornerRadius=UDim.new(0,14)local title=Instance.new("TextLabel",frame)title.Size=UDim2.new(1,-60,0,30)title.Position=UDim2.new(0,15,0,5)title.Text="Delta X Mobile"title.TextColor3=Color3.fromRGB(255,255,255)title.BackgroundTransparency=1 title.Font,title.TextSize,title.TextXAlignment=Enum.Font.SourceSansBold,16,Enum.TextXAlignment.Left local hideBtn=Instance.new("TextButton",frame)hideBtn.Size=UDim2.new(0,50,0,22)hideBtn.Position=UDim2.new(1,-65,0,9)hideBtn.BackgroundColor3=Color3.fromRGB(45,45,45)hideBtn.TextColor3=Color3.fromRGB(255,255,255)hideBtn.Text="HIDE"hideBtn.Font,hideBtn.TextSize=Enum.Font.SourceSansBold,11 Instance.new("UICorner",hideBtn).CornerRadius=UDim.new(1,0)local cf=Instance.new("Frame",frame)cf.Size=UDim2.new(1,0,1,-40)cf.Position=UDim2.new(0,0,0,40)cf.BackgroundTransparency=1 local function createRow(y,text)local lbl=Instance.new("TextLabel",cf)lbl.Size=UDim2.new(0,140,0,25)lbl.Position=UDim2.new(0,15,0,y)lbl.Text=text lbl.TextColor3,lbl.BackgroundTransparency=Color3.fromRGB(220,220,220),1 lbl.Font,lbl.TextSize,lbl.TextXAlignment=Enum.Font.SourceSans,14,Enum.TextXAlignment.Left local btn=Instance.new("TextButton",cf)btn.Size=UDim2.new(0,20,0,20)btn.Position=UDim2.new(1,-35,0,y+2)btn.BackgroundColor3=Color3.fromRGB(255,75,75)btn.Text=""Instance.new("UICorner",btn).CornerRadius=UDim.new(1,0)return btn end local flyBtn=createRow(5,"ระบบบิน (Fly)")local noclipBtn=createRow(35,"ทะลุวัตถุ (NoClip)")local walkBtn=createRow(65,"เดินไว (Speed)")local sf=Instance.new("TextButton",cf)sf.Size=UDim2.new(0,130,0,6)sf.Position=UDim2.new(0,15,0,115)sf.BackgroundColor3,sf.Text,sf.AutoButtonColor=Color3.fromRGB(50,50,50),"",false Instance.new("UICorner",sf).CornerRadius=UDim.new(1,0)local sp=Instance.new("Frame",sf)sp.Size=UDim2.new(0.4,0,1,0)sp.BackgroundColor3=Color3.fromRGB(75,150,255)Instance.new("UICorner",sp).CornerRadius=UDim.new(1,0)local sd=Instance.new("TextButton",sf)sd.Size=UDim2.new(0,14,0,14)sd.Position=UDim2.new(0.4,-7,0,-4)sd.BackgroundColor3,sd.Text=Color3.fromRGB(255,255,255),""Instance.new("UICorner",sd).CornerRadius=UDim.new(1,0)local box=Instance.new("TextBox",cf)box.Size=UDim2.new(0,45,0,22)box.Position=UDim2.new(1,-60,0,107)box.BackgroundColor3,box.TextColor3,box.Text=Color3.fromRGB(45,45,45),Color3.fromRGB(255,255,255),"100"box.Font,box.TextSize=Enum.Font.SourceSansBold,14 Instance.new("UICorner",box).CornerRadius=UDim.new(0,6)local function updateUI(pct)pct=math.clamp(pct,0,1)sd.Position=UDim2.new(pct,-7,0,-4)sp.Size=UDim2.new(pct,0,1,0)speedVal=math.round(pct*250)box.Text=tostring(speedVal)end local function setVal(v)speedVal=math.clamp(v or 100,0,250)box.Text=tostring(speedVal)local pct=speedVal/250 sd.Position=UDim2.new(pct,-7,0,-4)sp.Size=UDim2.new(pct,0,1,0)end local function slide(input)if input.UserInputType==Enum.UserInputType.MouseButton1 or input.UserInputType==Enum.UserInputType.Touch then local conn,endConn local function move()local pct=(U:GetMouseLocation().X-sf.AbsolutePosition.X)/sf.AbsoluteSize.Width updateUI(pct)end conn=U.InputChanged:Connect(function(io)if io.UserInputType==Enum.UserInputType.MouseMovement or io.UserInputType==Enum.UserInputType.Touch then move()end end)endConn=U.InputEnded:Connect(function(io)if io.UserInputType==Enum.UserInputType.MouseButton1 or io.UserInputType==Enum.UserInputType.Touch then conn:Disconnect()endConn:Disconnect()end end)move()end end sd.InputBegan:Connect(slide)sf.InputBegan:Connect(slide)box.FocusLost:Connect(function()setVal(tonumber(box.Text))end)setVal(100)local function togVis(b,s)b.BackgroundColor3=s and Color3.fromRGB(75,255,75) or Color3.fromRGB(255,75,75)end hideBtn.MouseButton1Click:Connect(function()isMenuOpen=not isMenuOpen cf.Visible=isMenuOpen frame.ClipsDescendants=not isMenuOpen frame.Size=isMenuOpen and UDim2.new(0,240,0,190) or UDim2.new(0,240,0,35)hideBtn.Text=isMenuOpen and "HIDE" or "SHOW"hideBtn.BackgroundColor3=isMenuOpen and Color3.fromRGB(45,45,45) or Color3.fromRGB(50,180,100)end)local att=Instance.new("Attachment")local lv=Instance.new("LinearVelocity")lv.MaxForce=math.huge lv.VectorVelocity=Vector3.new(0,0,0)local function hook(c)char,hum,root=c,c:WaitForChild("Humanoid"),c:WaitForChild("HumanoidRootPart")att.Parent,lv.Attachment0,lv.Parent=root,att,root end if char then hook(char)end lp.CharacterAdded:Connect(hook)flyBtn.MouseButton1Click:Connect(function()isFlying=not isFlying togVis(flyBtn,isFlying)if not isFlying then lv.VectorVelocity=Vector3.new(0,0,0)end end)noclipBtn.MouseButton1Click:Connect(function()isNoClip=not isNoClip togVis(noclipBtn,isNoClip)end)walkBtn.MouseButton1Click:Connect(function()isFastWalk=not isFastWalk togVis(walkBtn,isFastWalk)if not isFastWalk and hum then hum.WalkSpeed=16 end end)R.Stepped:Connect(function()if not char or not root or not hum then return end if isFastWalk and not isFlying then hum.WalkSpeed=speedVal end if isNoClip then for _,p in pairs(char:GetChildren())do if p:IsA("BasePart")then p.CanCollide=false end end end if isFlying then for _,p in pairs(char:GetChildren())do if p:IsA("BasePart")then p.Massless=true end end hum:ChangeState(Enum.HumanoidStateType.Physics)local md=hum.MoveDirection local flyDir=Vector3.new(0,0,0)if md.Magnitude > 0 then flyDir=cam.CFrame:VectorToWorldSpace(Vector3.new(md.X,0,md.Z))            flyDir=flyDir+Vector3.new(0,cam.CFrame.LookVector.Y*-md.Z,0)end if flyDir.Magnitude > 0 then local speed=isFastWalk and speedVal or 50 lv.VectorVelocity=flyDir.Unit*speed root.CFrame=CFrame.lookAt(root.Position,root.Position+flyDir)else lv.VectorVelocity=Vector3.new(0,0,0)end end end)
+local P = game:Service("Players")
+local R = game:Service("RunService")
+local U = game:Service("UserInputService")
+local lp = P.LocalPlayer
+local char = lp.Character or lp.CharacterAdded:Wait()
+local hum = char:WaitForChild("Humanoid")
+local root = char:WaitForChild("HumanoidRootPart")
+local cam = workspace.CurrentCamera
+
+local isFlying, isNoClip, isFastWalk, isMenuOpen, speedVal = false, false, false, true, 100
+
+-- Setup UI
+local sg = Instance.new("ScreenGui", lp:WaitForChild("PlayerGui"))
+sg.Name = "DXM"
+sg.ResetOnSpawn = false
+
+local frame = Instance.new("Frame", sg)
+frame.Size = UDim2.new(0, 240, 0, 190)
+frame.Position = UDim2.new(0.1, 0, 0.2, 0)
+frame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+frame.Active, frame.Draggable = true, true
+Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 14)
+
+local title = Instance.new("TextLabel", frame)
+title.Size = UDim2.new(1, -60, 0, 30)
+title.Position = UDim2.new(0, 15, 0, 5)
+title.Text = "Delta X Mobile"
+title.TextColor3 = Color3.fromRGB(255, 255, 255)
+title.BackgroundTransparency = 1
+title.Font, title.TextSize, title.TextXAlignment = Enum.Font.SourceSansBold, 16, Enum.TextXAlignment.Left
+
+local hideBtn = Instance.new("TextButton", frame)
+hideBtn.Size = UDim2.new(0, 50, 0, 22)
+hideBtn.Position = UDim2.new(1, -65, 0, 9)
+hideBtn.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+hideBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+hideBtn.Text = "HIDE"
+hideBtn.Font, hideBtn.TextSize = Enum.Font.SourceSansBold, 11
+Instance.new("UICorner", hideBtn).CornerRadius = UDim.new(1, 0)
+
+local cf = Instance.new("Frame", frame)
+cf.Size = UDim2.new(1, 0, 1, -40)
+cf.Position = UDim2.new(0, 0, 0, 40)
+cf.BackgroundTransparency = 1
+
+local function createRow(y, text)
+    local lbl = Instance.new("TextLabel", cf)
+    lbl.Size = UDim2.new(0, 140, 0, 25)
+    lbl.Position = UDim2.new(0, 15, 0, y)
+    lbl.Text = text
+    lbl.TextColor3, lbl.BackgroundTransparency = Color3.fromRGB(220, 220, 220), 1
+    lbl.Font, lbl.TextSize, lbl.TextXAlignment = Enum.Font.SourceSans, 14, Enum.TextXAlignment.Left
+
+    local btn = Instance.new("TextButton", cf)
+    btn.Size = UDim2.new(0, 20, 0, 20)
+    btn.Position = UDim2.new(1, -35, 0, y + 2)
+    btn.BackgroundColor3 = Color3.fromRGB(255, 75, 75)
+    btn.Text = ""
+    Instance.new("UICorner", btn).CornerRadius = UDim.new(1, 0)
+    return btn
+end
+
+local flyBtn = createRow(5, "ระบบบิน (Fly)")
+local noclipBtn = createRow(35, "ทะลุวัตถุ (NoClip)")
+local walkBtn = createRow(65, "เดินไว (Speed)")
+
+local sf = Instance.new("TextButton", cf)
+sf.Size = UDim2.new(0, 130, 0, 6)
+sf.Position = UDim2.new(0, 15, 0, 115)
+sf.BackgroundColor3, sf.Text, sf.AutoButtonColor = Color3.fromRGB(50, 50, 50), "", false
+Instance.new("UICorner", sf).CornerRadius = UDim.new(1, 0)
+
+local sp = Instance.new("Frame", sf)
+sp.Size = UDim2.new(0.4, 0, 1, 0)
+sp.BackgroundColor3 = Color3.fromRGB(75, 150, 255)
+Instance.new("UICorner", sp).CornerRadius = UDim.new(1, 0)
+
+local sd = Instance.new("TextButton", sf)
+sd.Size = UDim2.new(0, 14, 0, 14)
+sd.Position = UDim2.new(0.4, -7, 0, -4)
+sd.BackgroundColor3, sd.Text = Color3.fromRGB(255, 255, 255), ""
+Instance.new("UICorner", sd).CornerRadius = UDim.new(1, 0)
+
+local box = Instance.new("TextBox", cf)
+box.Size = UDim2.new(0, 45, 0, 22)
+box.Position = UDim2.new(1, -60, 0, 107)
+box.BackgroundColor3, box.TextColor3, box.Text = Color3.fromRGB(45, 45, 45), Color3.fromRGB(255, 255, 255), "100"
+box.Font, box.TextSize = Enum.Font.SourceSansBold, 14
+Instance.new("UICorner", box).CornerRadius = UDim.new(0, 6)
+
+local function updateUI(pct)
+    pct = math.clamp(pct, 0, 1)
+    sd.Position = UDim2.new(pct, -7, 0, -4)
+    sp.Size = UDim2.new(pct, 0, 1, 0)
+    speedVal = math.round(pct * 250)
+    box.Text = tostring(speedVal)
+end
+
+local function setVal(v)
+    speedVal = math.clamp(v or 100, 0, 250)
+    box.Text = tostring(speedVal)
+    local pct = speedVal / 250
+    sd.Position = UDim2.new(pct, -7, 0, -4)
+    sp.Size = UDim2.new(pct, 0, 1, 0)
+end
+
+local function slide(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        local conn, endConn
+        local function move()
+            local pct = (U:GetMouseLocation().X - sf.AbsolutePosition.X) / sf.AbsoluteSize.Width
+            updateUI(pct)
+        end
+        conn = U.InputChanged:Connect(function(io)
+            if io.UserInputType == Enum.UserInputType.MouseMovement or io.UserInputType == Enum.UserInputType.Touch then move() end
+        end)
+        endConn = U.InputEnded:Connect(function(io)
+            if io.UserInputType == Enum.UserInputType.MouseButton1 or io.UserInputType == Enum.UserInputType.Touch then
+                conn:Disconnect()
+                endConn:Disconnect()
+            end
+        end)
+        move()
+    end
+end
+
+sd.InputBegan:Connect(slide)
+sf.InputBegan:Connect(slide)
+box.FocusLost:Connect(function() setVal(tonumber(box.Text)) end)
+setVal(100)
+
+local function togVis(b, s) 
+    b.BackgroundColor3 = s and Color3.fromRGB(75, 255, 75) or Color3.fromRGB(255, 75, 75) 
+end
+
+hideBtn.MouseButton1Click:Connect(function()
+    isMenuOpen = not isMenuOpen
+    cf.Visible = isMenuOpen
+    frame.ClipsDescendants = not isMenuOpen
+    frame.Size = isMenuOpen and UDim2.new(0, 240, 0, 190) or UDim2.new(0, 240, 0, 35)
+    hideBtn.Text = isMenuOpen and "HIDE" or "SHOW"
+    hideBtn.BackgroundColor3 = isMenuOpen and Color3.fromRGB(45, 45, 45) or Color3.fromRGB(50, 180, 100)
+end)
+
+local att = Instance.new("Attachment")
+local lv = Instance.new("LinearVelocity")
+lv.MaxForce = math.huge
+lv.VectorVelocity = Vector3.new(0, 0, 0)
+
+local function hook(c)
+    char = c
+    hum = c:WaitForChild("Humanoid")
+    root = c:WaitForChild("HumanoidRootPart")
+    att.Parent = root
+    lv.Attachment0 = att
+    lv.Parent = root
+end
+
+if char then hook(char) end
+lp.CharacterAdded:Connect(hook)
+
+flyBtn.MouseButton1Click:Connect(function()
+    isFlying = not isFlying
+    togVis(flyBtn, isFlying)
+    if not isFlying then lv.VectorVelocity = Vector3.new(0, 0, 0) end
+end)
+
+noclipBtn.MouseButton1Click:Connect(function()
+    isNoClip = not isNoClip
+    togVis(noclipBtn, isNoClip)
+end)
+
+walkBtn.MouseButton1Click:Connect(function()
+    isFastWalk = not isFastWalk
+    togVis(walkBtn, isFastWalk)
+    if not isFastWalk and hum then hum.WalkSpeed = 16 end
+end)
+
+R.Stepped:Connect(function()
+    if not char or not root or not hum then return end
+    if isFastWalk and not isFlying then hum.WalkSpeed = speedVal end
+    if isNoClip then
+        for _, p in pairs(char:GetChildren()) do
+            if p:IsA("BasePart") then p.CanCollide = false end
+        end
+    end
+    if isFlying then
+        for _, p in pairs(char:GetChildren()) do
+            if p:IsA("BasePart") then p.Massless = true end
+        end
+        hum:ChangeState(Enum.HumanoidStateType.Physics)
+        local md = hum.MoveDirection
+        local flyDir = Vector3.new(0, 0, 0)
+        if md.Magnitude > 0 then
+            flyDir = cam.CFrame:VectorToWorldSpace(Vector3.new(md.X, 0, md.Z))
+            flyDir = flyDir + Vector3.new(0, cam.CFrame.LookVector.Y * -md.Z, 0)
+        end
+        if flyDir.Magnitude > 0 then
+            local speed = isFastWalk and speedVal or 50
+            lv.VectorVelocity = flyDir.Unit * speed
+            root.CFrame = CFrame.lookAt(root.Position, root.Position + flyDir)
+        else
+            lv.VectorVelocity = Vector3.new(0, 0, 0)
+        end
+    end
+end)
