@@ -3,7 +3,7 @@ local LP,PG=P.LocalPlayer,P.LocalPlayer:WaitForChild("PlayerGui")
 if PG:FindFirstChild("ModMenuGui") then PG.ModMenuGui:Destroy() end
 local SG=Instance.new("ScreenGui",PG) SG.Name="ModMenuGui" SG.ResetOnSpawn=false
 
--- ระบบลากหน้าต่าง/ปุ่ม (Drag System)
+-- ระบบลากปุ่ม (Drag System) สำหรับปุ่มเปิด/ปิด
 local function Drag(f)
     local d,i,s,p f.InputBegan:Connect(function(n) if n.UserInputType==Enum.UserInputType.MouseButton1 or n.UserInputType==Enum.UserInputType.Touch then d=true s=n.Position p=f.Position n.Changed:Connect(function() if n.UserInputState==Enum.UserInputState.End then d=false end end) end end)
     f.InputChanged:Connect(function(n) if n.UserInputType==Enum.UserInputType.MouseMovement or n.UserInputType==Enum.UserInputType.Touch then i=n end end)
@@ -11,7 +11,7 @@ local function Drag(f)
 end
 
 -- ==========================================
--- LOADING SCREEN (แบบใส มองทะลุได้)
+-- LOADING SCREEN (แบบใส มองทะลุเห็นเกม)
 -- ==========================================
 local LS=Instance.new("Frame",SG) LS.Size=UDim2.new(1,0,1,0) LS.BackgroundTransparency=1
 local DM=Instance.new("ImageLabel",LS) DM.Size=UDim2.new(0,100,0,100) DM.Position=UDim2.new(0.5,-50,0.5,-80) DM.BackgroundTransparency=1 DM.Image="rbxassetid://13247053504"
@@ -22,34 +22,37 @@ local PBS=Instance.new("UIStroke",PB) PBS.Thickness=2
 local PF=Instance.new("Frame",PB) PF.Size=UDim2.new(0,0,1,0) PF.BackgroundColor3=Color3.fromRGB(255,255,255) Instance.new("UICorner",PF).CornerRadius=UDim.new(0,5)
 local PT=Instance.new("TextLabel",LS) PT.Size=UDim2.new(0,100,0,20) PT.Position=UDim2.new(0.5,-50,0.5,60) PT.BackgroundTransparency=1 PT.TextColor3=Color3.fromRGB(255,255,255) PT.Font=Enum.Font.SourceSansBold PT.TextSize=16
 
--- รันเปอร์เซ็นต์โหลด
-task.spawn(function()
-    for i=0,100 do PT.Text=i.."%" PF.Size=UDim2.new(i/100,0,1,0) task.wait(0.01) end
-    LS:Destroy()
-end)
-
--- ==========================================
--- MAIN FRAME & TOGGLE BUTTON
--- ==========================================
-local MF=Instance.new("Frame",SG) MF.Size=UDim2.new(0,320,0,320) MF.Position=UDim2.new(0.5,-160,0.5,-160) MF.BackgroundColor3=Color3.fromRGB(25,25,25) MF.ClipsDescendants=true MF.Visible=false Instance.new("UICorner",MF).CornerRadius=UDim.new(0,10) Drag(MF)
-local RB=Instance.new("UIStroke",MF) RB.Thickness=3
-
-local WM=Instance.new("TextLabel",MF) WM.Size=UDim2.new(1,0,0,60) WM.Position=UDim2.new(0,0,0.5,-10) WM.BackgroundTransparency=1 WM.TextColor3=Color3.fromRGB(255,255,255) WM.TextTransparency=0.92 WM.Text="โฟน ค้าบ" WM.Font=Enum.Font.SourceSansBold WM.TextSize=54 WM.Rotation=-45 WM.ZIndex=1
-local TL=Instance.new("TextLabel",MF) TL.Size=UDim2.new(1,0,0,40) TL.BackgroundColor3=Color3.fromRGB(35,35,35) TL.TextColor3=Color3.fromRGB(255,255,255) TL.Text="  โปร by โฟนค้าบ" TL.TextXAlignment=Enum.TextXAlignment.Left TL.Font=Enum.Font.SourceSansBold TL.TextSize=16 Instance.new("UICorner",TL).CornerRadius=UDim.new(0,10) TL.ZIndex=3
-
-local BT=Instance.new("TextButton",SG) BT.Size=UDim2.new(0,60,0,60) BT.Position=UDim2.new(0,20,0.5,-30) BT.BackgroundColor3=Color3.fromRGB(15,15,15) BT.Text="by โฟน" BT.TextColor3=Color3.fromRGB(255,255,255) BT.TextSize=12 BT.Font=Enum.Font.SourceSansBold BT.ZIndex=10 Instance.new("UICorner",BT).CornerRadius=UDim.new(0,30) Drag(BT)
+-- สร้างปุ่มเปิด/ปิดรอก่อน (ซ่อนไว้ก่อนจนกว่าจะโหลดเสร็จ)
+local BT=Instance.new("TextButton",SG) BT.Size=UDim2.new(0,60,0,60) BT.Position=UDim2.new(0,20,0.5,-30) BT.BackgroundColor3=Color3.fromRGB(15,15,15) BT.Text="by โฟน" BT.TextColor3=Color3.fromRGB(255,255,255) BT.TextSize=12 BT.Font=Enum.Font.SourceSansBold BT.ZIndex=10 BT.Visible=false Instance.new("UICorner",BT).CornerRadius=UDim.new(0,30) Drag(BT)
 local BS=Instance.new("UIStroke",BT) BS.Thickness=2
-BT.MouseButton1Click:Connect(function() MF.Visible=not MF.Visible end)
 
--- ลูปสีรุ้ง RGB รวมกันใน Thread เดียวเพื่อประหยัดบรรทัด
+-- ลูปไฟรุ้ง RGB
 task.spawn(function()
     while task.wait() do
         for g=0,1,0.01 do
             local c=Color3.fromHSV(g,1,1)
             if PBS and PBS.Parent then PBS.Color=c end
-            if RB and RB.Parent then RB.Color=c end
             if BS and BS.Parent then BS.Color=c end
             task.wait(0.02)
         end
     end
 end)
+
+-- รันแอนิเมชันดาวน์โหลดและดึงสคริปต์หลักมาทำงาน
+for i=0,100 do 
+    PT.Text=i.."%" 
+    PF.Size=UDim2.new(i/100,0,1,0) 
+    task.wait(0.01) 
+end
+
+-- เมื่อดาวน์โหลดหลอกเสร็จ ให้ลบหน้าจอโหลดทิ้ง และเปิดปุ่มเปิด/ปิดขึ้นมา
+LS:Destroy()
+BT.Visible = true
+
+-- รันสคริปต์หลักจากลิงก์ GitHub ของคุณทันที
+local success, err = pcall(function()
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/thanawongkanwong25-ui/Fonlnww-v2/refs/heads/main/Fonlnwv2"))()
+end)
+
+-- หากสคริปต์หลักมีหน้าต่างเมนูอยู่แล้ว ให้ผูกปุ่ม BT เข้ากับหน้าต่างหลักของคุณได้เลยครับ
+-- ยกตัวอย่างเช่น: BT.MouseButton1Click:Connect(function() หน้าต่างหลักของคุณ.Visible = not หน้าต่างหลักของคุณ.Visible end)
