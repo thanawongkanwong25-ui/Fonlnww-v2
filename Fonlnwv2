@@ -1,82 +1,100 @@
-local P,U=game:GetService("Players"),game:GetService("UserInputService")
-local LP,PG=P.LocalPlayer,P.LocalPlayer:WaitForChild("PlayerGui")
+local P, U = game:GetService("Players"), game:GetService("UserInputService")
+local LP, PG = P.LocalPlayer, P.LocalPlayer:WaitForChild("PlayerGui")
 
--- สร้างตัวบ่งชี้เพื่อป้องกันไม่ให้สคริปต์นี้รันซ้ำซ้อนซาก
-if _G.FonLoaderRunning then return end
-_G.FonLoaderRunning = true
+-- ป้องกันไม่ให้ตัวบูตระบบทำงานซ้อนกันเอง
+if _G.FonMainLoaderActive then return end
+_G.FonMainLoaderActive = true
 
+-- ล้างโฟลเดอร์ UI เก่าเพื่อเคลียร์แรมมือถือ
 if PG:FindFirstChild("ModMenuGui") then PG.ModMenuGui:Destroy() end
-local SG=Instance.new("ScreenGui",PG) SG.Name="ModMenuGui" SG.ResetOnSpawn=false
+local SG = Instance.new("ScreenGui", PG) SG.Name = "ModMenuGui" SG.ResetOnSpawn = false
 
+-- ระบบลากปุ่มด้วยนิ้วสัมผัสสำหรับ Android
 local function Drag(f)
-    local d,i,s,p f.InputBegan:Connect(function(n) if n.UserInputType==Enum.UserInputType.MouseButton1 or n.UserInputType==Enum.UserInputType.Touch then d=true s=n.Position p=f.Position n.Changed:Connect(function() if n.UserInputState==Enum.UserInputState.End then d=false end end) end end)
-    f.InputChanged:Connect(function(n) if n.UserInputType==Enum.UserInputType.MouseMovement or n.UserInputType==Enum.UserInputType.Touch then i=n end end)
-    U.InputChanged:Connect(function(n) if n==i and d then local x=n.Position-s f.Position=UDim2.new(p.X.Scale,p.X.Offset+x.X,p.Y.Scale,p.Y.Offset+x.Y) end end)
+    local d, i, s, p f.InputBegan:Connect(function(n) if n.UserInputType == Enum.UserInputType.MouseButton1 or n.UserInputType == Enum.UserInputType.Touch then d = true s = n.Position p = f.Position n.Changed:Connect(function() if n.UserInputState == Enum.UserInputState.End then d = false end end) end end)
+    f.InputChanged:Connect(function(n) if n.UserInputType == Enum.UserInputType.MouseMovement or n.UserInputType == Enum.UserInputType.Touch then i = n end end)
+    U.InputChanged:Connect(function(n) if n == i and d then local x = n.Position - s f.Position = UDim2.new(p.X.Scale, p.X.Offset + x.X, p.Y.Scale, p.Y.Offset + x.Y) end end)
 end
 
 -- ==========================================
--- LOADING SCREEN (พื้นหลังใส + แก้ไขรูปโดราเอมอนหาย)
+-- LOADING SCREEN (พื้นหลังใส มองทะลุฉากหลังเกม)
 -- ==========================================
-local LS=Instance.new("Frame",SG) LS.Size=UDim2.new(1,0,1,0) LS.BackgroundTransparency=1
+local LS = Instance.new("Frame", SG) LS.Size = UDim2.new(1, 0, 1, 0) LS.BackgroundTransparency = 1
 
--- บังคับใช้ ContentProvider โหลดรูปล่วงหน้า ป้องกันรูปภาพหายบน Android
-local DM=Instance.new("ImageLabel",LS) DM.Size=UDim2.new(0,100,0,100) DM.Position=UDim2.new(0.5,-50,0.5,-80) DM.BackgroundTransparency=1 DM.Image="http://roblox.com" DM.ZIndex=15
-game:GetService("ContentProvider"):PreloadAsync({DM})
+-- [FIXED] ดึงรูปแบบไฟล์ภาพผ่านระบบเว็บโดยตรง เพื่อบังคับให้ Delta Android แสดงรูปภาพโดราเอมอนสำเร็จ
+local DM = Instance.new("ImageLabel", LS) DM.Size = UDim2.new(0, 100, 0, 100) DM.Position = UDim2.new(0.5, -50, 0.5, -80) DM.BackgroundTransparency = 1 DM.Image = "https://roblox.com" DM.ZIndex = 20
+local DMS = Instance.new("UIStroke", DM) DMS.Thickness = 2 DMS.Color = Color3.fromRGB(255, 255, 255)
 
-local DMS=Instance.new("UIStroke",DM) DMS.Thickness=2 DMS.Color=Color3.fromRGB(255,255,255)
-local PB=Instance.new("Frame",LS) PB.Size=UDim2.new(0,200,0,10) PB.Position=UDim2.new(0.5,-100,0.5,40) PB.BackgroundColor3=Color3.fromRGB(30,30,30) Instance.new("UICorner",PB).CornerRadius=UDim.new(0,5)
-local PBS=Instance.new("UIStroke",PB) PBS.Thickness=2
-local PF=Instance.new("Frame",PB) PF.Size=UDim2.new(0,0,1,0) PF.BackgroundColor3=Color3.fromRGB(255,255,255) Instance.new("UICorner",PF).CornerRadius=UDim.new(0,5)
-local PT=Instance.new("TextLabel",LS) PT.Size=UDim2.new(0,100,0,20) PT.Position=UDim2.new(0.5,-50,0.5,60) PT.BackgroundTransparency=1 PT.TextColor3=Color3.fromRGB(255,255,255) PT.Font=Enum.Font.SourceSansBold PT.TextSize=16
+local PB = Instance.new("Frame", LS) PB.Size = UDim2.new(0, 200, 0, 10) PB.Position = UDim2.new(0.5, -100, 0.5, 40) PB.BackgroundColor3 = Color3.fromRGB(30, 30, 30) Instance.new("UICorner", PB).CornerRadius = UDim.new(0, 5)
+local PBS = Instance.new("UIStroke", PB) PBS.Thickness = 2
+local PF = Instance.new("Frame", PB) PF.Size = UDim2.new(0, 0, 1, 0) PF.BackgroundColor3 = Color3.fromRGB(255, 255, 255) Instance.new("UICorner", PF).CornerRadius = UDim.new(0, 5)
+local PT = Instance.new("TextLabel", LS) PT.Size = UDim2.new(0, 100, 0, 20) PT.Position = UDim2.new(0.5, -50, 0.5, 60) PT.BackgroundTransparency = 1 PT.TextColor3 = Color3.fromRGB(255, 255, 255) PT.Font = Enum.Font.SourceSansBold PT.TextSize = 16
 
-local BT=Instance.new("TextButton",SG) BT.Size=UDim2.new(0,60,0,60) BT.Position=UDim2.new(0,20,0.5,-30) BT.BackgroundColor3=Color3.fromRGB(15,15,15) BT.Text="by โฟน" BT.TextColor3=Color3.fromRGB(255,255,255) BT.TextSize=12 BT.Font=Enum.Font.SourceSansBold BT.ZIndex=20 BT.Visible=false Instance.new("UICorner",BT).CornerRadius=UDim.new(0,30) Drag(BT)
-local BS=Instance.new("UIStroke",BT) BS.Thickness=2
+-- ปุ่มเปิด/ปิดทรงกลม สีดำ "by โฟน" (ซ่อนไว้ก่อนจนกว่าคลาวด์จะโหลดเสร็จ)
+local BT = Instance.new("TextButton", SG) BT.Size = UDim2.new(0, 60, 0, 60) BT.Position = UDim2.new(0, 20, 0.5, -30) BT.BackgroundColor3 = Color3.fromRGB(15, 15, 15) BT.Text = "by โฟน" BT.TextColor3 = Color3.fromRGB(255, 255, 255) BT.TextSize = 12 BT.Font = Enum.Font.SourceSansBold BT.ZIndex = 30 BT.Visible = false Instance.new("UICorner", BT).CornerRadius = UDim.new(0, 30) Drag(BT)
+local BS = Instance.new("UIStroke", BT) BS.Thickness = 2
 
--- ระบบไฟวิ่งสีรุ้งแบบเสถียร ไม่กินสเปกมือถือ
-local isRunning = true
+-- ลูปขอบไฟวิ่งรุ้ง RGB แบบอิสระ ไม่ดึงความเร็ว Thread หลัก
+local isRainbow = true
 task.spawn(function()
-    while isRunning do
-        for g=0,1,0.02 do
-            if not isRunning then break end
-            local c=Color3.fromHSV(g,1,1)
-            if DMS and DMS.Parent then DMS.Color=c end
-            if PBS and PBS.Parent then PBS.Color=c end
-            if BS and BS.Parent then BS.Color=c end
-            task.wait(0.015)
+    while isRainbow do
+        for g = 0, 1, 0.02 do
+            if not isRainbow then break end
+            local c = Color3.fromHSV(g, 1, 1)
+            if DMS and DMS.Parent then DMS.Color = c end
+            if PBS and PBS.Parent then PBS.Color = c end
+            if BS and BS.Parent then BS.Color = c end
+            task.wait(0.01)
         end
     end
 end)
 
--- แอนิเมชันความเร็วแถบเปอร์เซ็นต์โหลดช่วงแรก
-for i=0,85 do 
-    if PT and PF then PT.Text=i.."%" PF.Size=UDim2.new(i/100,0,1,0) end
-    task.wait(0.01) 
-end
+-- [ANTI-LOOP BUG] ดึงสคริปต์หลักจาก GitHub มาเก็บไว้ในแรมล่วงหน้า เพื่อตัดปัญหาการโหลดวนซ้ำ
+local githubRawCode = ""
+local downloadSuccess = false
 
--- สั่งรันดึงสคริปต์จาก GitHub ในช่วงท้ายของการดาวน์โหลด เพื่อป้องกันการค้างและวนลูปกลับมา 0% ใหม่
-local success, result = pcall(function()
-    return loadstring(game:HttpGet("https://raw.githubusercontent.com/thanawongkanwong25-ui/Fonlnww-v2/refs/heads/main/Fonlnwv2"))()
+task.spawn(function()
+    pcall(function()
+        githubRawCode = game:HttpGet("https://githubusercontent.com")
+        downloadSuccess = true
+    end)
 end)
 
--- โหลดเปอร์เซ็นต์จนเต็มเมื่อระบบเรียกสคริปต์ใน GitHub สำเร็จ
-for i=86,100 do
-    if PT and PF then PT.Text=i.."%" PF.Size=UDim2.new(i/100,0,1,0) end
-    task.wait(0.005)
+-- แอนิเมชันรัน % ดาวน์โหลดควบคู่ไปกับการดึงสคริปต์จาก GitHub
+for i = 0, 100 do
+    -- หน่วงเวลาแถบวิ่งช่วงปลาย (95%) เพื่อรอให้ระบบ Android ดึงสคริปต์ทางอินเทอร์เน็ตเสร็จก่อน
+    if i >= 95 and not downloadSuccess then
+        while not downloadSuccess do task.wait(0.05) end
+    end
+    
+    if PT and PF then
+        PT.Text = i .. "%"
+        PF.Size = UDim2.new(i / 100, 0, 1, 0)
+    end
+    task.wait(0.01)
 end
 
--- [COMPLETELY DESTROY] ปิดระบบโหลดดิ้งอย่างสมบูรณ์แบบ ลบหน้าจอโหลดทิ้งถาวร
-isRunning = false
-_G.FonLoaderRunning = nil
+-- [FORCE SHUTDOWN LOADING] ทำลายระเบิดหน้าจอโหลดทิ้งแบบถาวร เพื่อไม่มีทางวนลูปกลับมาได้อีก
+isRainbow = false
+_G.FonMainLoaderActive = nil
 if LS then LS:Destroy() end
 BT.Visible = true
 
--- ปุ่มสัมผัส "by โฟน" สลับเปิด/ปิดหน้าต่างโปรให้คุณอัตโนมัติ
+-- แปลงข้อความที่ดึงมาจาก GitHub และสั่งเปิดโปรหลักทำงานทันที
+if downloadSuccess and githubRawCode ~= "" then
+    local runScript = loadstring(githubRawCode)
+    if runScript then
+        task.spawn(runScript)
+    end
+end
+
+-- ปุ่ม "by โฟน" คอยตรวจเช็กและกดสลับเปิด/ปิดหน้าต่างโปรในเกมให้คุณอัตโนมัติ
 BT.MouseButton1Click:Connect(function()
     for _, gui in pairs(PG:GetChildren()) do
         if gui:IsA("ScreenGui") and gui.Name ~= "ModMenuGui" then
-            local mainFrame = gui:FindFirstChildOfClass("Frame") or gui:FindFirstChild("MainFrame") or gui:FindFirstChild("Main")
-            if mainFrame then
-                mainFrame.Visible = not mainFrame.Visible
+            local targetMenu = gui:FindFirstChildOfClass("Frame") or gui:FindFirstChild("MainFrame") or gui:FindFirstChild("Main")
+            if targetMenu then
+                targetMenu.Visible = not targetMenu.Visible
             end
         end
     end
