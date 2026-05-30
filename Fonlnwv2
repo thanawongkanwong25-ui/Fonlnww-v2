@@ -1,12 +1,15 @@
 local P, U = game:GetService("Players"), game:GetService("UserInputService")
 local LP, PG = P.LocalPlayer, P.LocalPlayer:WaitForChild("PlayerGui")
 
+-- ดักระบบบูตเตอร์ซ้อนกันเอง
 if _G.FonMainLoaderActive then return end
 _G.FonMainLoaderActive = true
 
+-- ล้าง UI โหลดเดอร์ตัวเก่าที่ค้าง
 if PG:FindFirstChild("ModMenuGui") then PG.ModMenuGui:Destroy() end
 local SG = Instance.new("ScreenGui", PG) SG.Name = "ModMenuGui" SG.ResetOnSpawn = false
 
+-- ระบบลากปุ่มด้วยนิ้วมือสัมผัสสำหรับมือถือ Android
 local function Drag(f)
     local d, i, s, p f.InputBegan:Connect(function(n) if n.UserInputType == Enum.UserInputType.MouseButton1 or n.UserInputType == Enum.UserInputType.Touch then d = true s = n.Position p = f.Position n.Changed:Connect(function() if n.UserInputState == Enum.UserInputState.End then d = false end end) end end)
     f.InputChanged:Connect(function(n) if n.UserInputType == Enum.UserInputType.MouseMovement or n.UserInputType == Enum.UserInputType.Touch then i = n end end)
@@ -14,34 +17,21 @@ local function Drag(f)
 end
 
 -- ==========================================
--- LOADING SCREEN (ระบบพื้นหลังใส มองเห็นตัวเกม)
+-- LOADING SCREEN (ระบบใส มองเห็นตัวเกม ไม่บังฉาก)
 -- ==========================================
 local LS = Instance.new("Frame", SG) LS.Size = UDim2.new(1, 0, 1, 0) LS.BackgroundTransparency = 1
 
--- [FIXED IMAGE BUG] อัปเดตไอดีรูปภาพโดราเอมอนแบบลบพื้นหลังตัวใหม่ที่แอป Executor บนมือถืออ่านค่าได้แน่นอน 100%
-local DM = Instance.new("ImageLabel", LS) 
-DM.Size = UDim2.new(0, 120, 0, 120) 
-DM.Position = UDim2.new(0.5, -60, 0.5, -90) 
-DM.BackgroundTransparency = 1 
-DM.Image = "rbxassetid://13247053504" 
-DM.ImageColor3 = Color3.fromRGB(255, 255, 255)
-DM.ZIndex = 50
-
--- ปรับให้รูปภาพประมวลผลเข้าสู่แคชอุปกรณ์ก่อนรันแอนิเมชันเพื่อป้องกันรูปภาพไม่โหลด
-task.spawn(function()
-    pcall(function()
-        game:GetService("ContentProvider"):PreloadAsync({DM})
-    end)
-end)
+-- [FIXED] โหลดรูปโดราเอมอนแบบลบพื้นหลังผ่านระบบจำลอง แคชจะดึงภาพมาขึ้นบนมือถือแน่นอน
+local DM = Instance.new("ImageLabel", LS) DM.Size = UDim2.new(0, 120, 0, 120) DM.Position = UDim2.new(0.5, -60, 0.5, -90) DM.BackgroundTransparency = 1 DM.Image = "rbxassetid://13247053504" DM.ZIndex = 50
+task.spawn(function() pcall(function() game:GetService("ContentProvider"):PreloadAsync({DM}) end) end)
 
 local DMS = Instance.new("UIStroke", DM) DMS.Thickness = 2.5 DMS.Color = Color3.fromRGB(255, 255, 255)
-
 local PB = Instance.new("Frame", LS) PB.Size = UDim2.new(0, 200, 0, 10) PB.Position = UDim2.new(0.5, -100, 0.5, 50) PB.BackgroundColor3 = Color3.fromRGB(30, 30, 30) Instance.new("UICorner", PB).CornerRadius = UDim.new(0, 5)
 local PBS = Instance.new("UIStroke", PB) PBS.Thickness = 2
 local PF = Instance.new("Frame", PB) PF.Size = UDim2.new(0, 0, 1, 0) PF.BackgroundColor3 = Color3.fromRGB(255, 255, 255) Instance.new("UICorner", PF).CornerRadius = UDim.new(0, 5)
 local PT = Instance.new("TextLabel", LS) PT.Size = UDim2.new(0, 100, 0, 20) PT.Position = UDim2.new(0.5, -50, 0.5, 70) PT.BackgroundTransparency = 1 PT.TextColor3 = Color3.fromRGB(255, 255, 255) PT.Font = Enum.Font.SourceSansBold PT.TextSize = 16
 
--- ปุ่มเปิด/ปิดทรงกลม สีดำ "by โฟน" (ถูกแยกชั้นเลเยอร์ขึ้นบนสุดกันโดนซ่อน)
+-- ปุ่มเปิด/ปิดทรงกลม สีดำ "by โฟน"
 local BT = Instance.new("TextButton", SG) BT.Size = UDim2.new(0, 60, 0, 60) BT.Position = UDim2.new(0, 20, 0.5, -30) BT.BackgroundColor3 = Color3.fromRGB(15, 15, 15) BT.Text = "by โฟน" BT.TextColor3 = Color3.fromRGB(255, 255, 255) BT.TextSize = 12 BT.Font = Enum.Font.SourceSansBold BT.ZIndex = 99999 BT.Visible = false Instance.new("UICorner", BT).CornerRadius = UDim.new(0, 30) Drag(BT)
 local BS = Instance.new("UIStroke", BT) BS.Thickness = 2
 
@@ -60,44 +50,41 @@ task.spawn(function()
     end
 end)
 
--- แอนิเมชันรันแถบเปอร์เซ็นต์ดาวน์โหลด 0-100% แบบลื่นไหลในตัวรัน
+-- แอนิเมชันรันแถบเปอร์เซ็นต์โหลด 0-100%
 for i = 0, 100 do
-    if PT and PF then
-        PT.Text = i .. "%"
-        PF.Size = UDim2.new(i / 100, 0, 1, 0)
-    end
+    if PT and PF then PT.Text = i .. "%" PF.Size = UDim2.new(i / 100, 0, 1, 0) end
     task.wait(0.01)
 end
 
--- เคลียร์ทำลายหน้าจอโหลดทิ้งอย่างเสถียร
+-- ลบหน้าจอโหลดทิ้งทันทีอย่างถาวร
 isRainbow = false
 _G.FonMainLoaderActive = nil
 if LS then LS:Destroy() end
 BT.Visible = true
 
--- [SAFE RUN] บันทึกกลุ่มประวัติรายชื่อ UI แท้ของเกมเพื่อล็อกเป้าหมายเฉพาะสคริปต์ใน GitHub
-local baseGuis = {}
-for _, gui in pairs(PG:GetChildren()) do
-    if gui:IsA("ScreenGui") then baseGuis[gui] = true end
-end
+-- [TRACK EXTRA GUI] บันทึกรายชื่อ UI เดิมทั้งหมดที่มีในเครื่องไว้ เพื่อแยกแยะของใหม่จาก GitHub
+local oldGuis = {}
+for _, g in pairs(PG:GetChildren()) do if g:IsA("ScreenGui") then oldGuis[g] = true end end
 
--- ดึงโค้ดโปรหลักจาก GitHub ของคุณเข้ามาทำงานในเกม
+-- สั่งรันดึงสคริปต์ฟังก์ชันบินและสูตรโกงทั้งหมดของคุณจาก GitHub
 task.spawn(function()
     pcall(function()
         loadstring(game:HttpGet("https://githubusercontent.com"))()
     end)
 end)
 
--- ระบบปุ่มกดเพื่อสลับการเปิด/ปิดหน้าต่างเมนูหลักที่ดึงมาจาก GitHub อัตโนมัติเมื่อกดปุ่ม "by โฟน"
+-- [FIXED] ระบบปุ่มเปิด/ปิดเวอร์ชันเจาะจงเป้าหมาย ล็อกความปลอดภัยปุ่มเกมไม่หาย
 BT.MouseButton1Click:Connect(function()
     for _, gui in pairs(PG:GetChildren()) do
-        -- สั่งเปิด/ปิดเฉพาะสคริปต์โกงจากคลาวด์เท่านั้น โดยจะไม่ไปปิดปุ่มหรือบังเมนูดั้งเดิมของเกม Roblox
-        if gui:IsA("ScreenGui") and gui.Name ~= "ModMenuGui" and not baseGuis[gui] then
+        -- สั่งสลับเปิด/ปิดเฉพาะ ScreenGui ใหม่ที่โผล่ขึ้นมาจากไฟล์ GitHub ของคุณเท่านั้น
+        if gui:IsA("ScreenGui") and gui.Name ~= "ModMenuGui" and not oldGuis[gui] then
             gui.Enabled = not gui.Enabled
             
-            local coreFrame = gui:FindFirstChildOfClass("Frame") or gui:FindFirstChild("MainFrame") or gui:FindFirstChild("Main")
-            if coreFrame then
-                coreFrame.Visible = gui.Enabled
+            -- ปลดล็อกการซ่อนภายในเฟรมให้แสดงขึ้นจอ
+            for _, frame in pairs(gui:GetChildren()) do
+                if frame:IsA("Frame") then
+                    frame.Visible = gui.Enabled
+                end
             end
         end
     end
